@@ -96,19 +96,6 @@ class BNCSolver(MaxCliqueSolver):
         new_constraints = [ind_set[0] for ind_set in sorted_set][:top_k]
         return new_constraints if len(new_constraints) else None
 
-    def get_solution(self):
-        try:
-            self.cplex_model.solve()
-            # get the solution variables and objective value
-            current_values = self.cplex_model.solution.get_values()
-            current_objective_value = (
-                self.cplex_model.solution.get_objective_value()
-            )
-            return current_objective_value, current_values
-
-        except:
-            return None, None
-
     def solve(self):
         self.init_model_with_heuristic_solution()
         self.branch_and_cut()
@@ -131,13 +118,13 @@ class BNCSolver(MaxCliqueSolver):
         subgraph = self.graph.graph.subgraph(solution_nodes[0].tolist())
         return None if is_clique else self.get_complement_edges(subgraph)
 
-    def goto_left_branch(self, branching_var, cur_branch):
+    def left_branching(self, branching_var, cur_branch):
         # Add Left constraints
         self.add_left_constraint(branching_var, cur_branch)
         self.branch_and_cut()
         self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
-    def goto_right_branch(self, branching_var, cur_branch):
+    def right_branching(self, branching_var, cur_branch):
         # Add Right constraints
         self.add_right_constraint(branching_var, cur_branch)
         self.branch_and_cut()
@@ -145,11 +132,9 @@ class BNCSolver(MaxCliqueSolver):
 
     def branch_and_cut(self):
         current_objective_value, current_values = self.get_solution()
-        if current_objective_value is None:
+        if current_objective_value is None or not self.current_solution_is_best(current_objective_value):
             return
-        # There is no sense in branching further
-        if not self.current_solution_is_best(current_objective_value):
-            return
+
         start_time = time.time()
         while time.time() - start_time <= self.tailing_off_time_threshold:
             new_constraints = self.separation(current_values)
@@ -165,7 +150,7 @@ class BNCSolver(MaxCliqueSolver):
         self.branch_num += 1
         cur_branch = self.branch_num
         branching_var = self.get_branching_var(current_values)
-        if branching_var == -1:
+        if branching_var[0] == -1:
             broken_constraints = self.check_solution(current_values)
             if broken_constraints is not None:
                 self.add_multiple_constraints(broken_constraints)
@@ -175,10 +160,10 @@ class BNCSolver(MaxCliqueSolver):
                 self.maximum_clique_size = math.floor(current_objective_value)
             return
 
-        # go to  right branch if value closer to 1
+        # go to right branch if value closer to 1
         if round(branching_var[1]):
-            self.goto_right_branch(branching_var, cur_branch)
-            self.goto_left_branch(branching_var, cur_branch)
+            self.right_branching(branching_var, cur_branch)
+            self.left_branching(branching_var, cur_branch)
         else:
-            self.goto_left_branch(branching_var, cur_branch)
-            self.goto_right_branch(branching_var, cur_branch)
+            self.left_branching(branching_var, cur_branch)
+            self.right_branching(branching_var, cur_branch)

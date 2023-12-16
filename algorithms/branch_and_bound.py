@@ -79,12 +79,8 @@ class BNBSolver(MaxCliqueSolver):
         self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
     def branching(self):
-        self.cplex_model.solve()
-
-        current_values = self.cplex_model.solution.get_values()
-        current_objective_value = self.cplex_model.solution.get_objective_value()
-
-        if not self.current_solution_is_best(current_objective_value):
+        current_objective_value, current_values = self.get_solution()
+        if current_objective_value is None or not self.current_solution_is_best(current_objective_value):
             return
 
         if all(

@@ -7,7 +7,7 @@ from graph import Graph
 
 
 class MaxCliqueSolver:
-    def __init__(self, graph: Graph):
+    def __init__(self, graph: Graph) -> None:
         self.graph = graph
         self.best_solution = []
         self.maximum_clique_size = 0
@@ -62,11 +62,10 @@ class MaxCliqueSolver:
 
     def get_branching_var(self, current_values: List[float]) -> Tuple[int, float]:
         if all([math.isclose(x, np.round(x), rel_tol=self.eps) for x in current_values]):
-            return -1
+            return (-1, None)
 
         not_integer_vars = [
-            (idx, x)
-            for idx, x in enumerate(current_values)
+            (idx, x) for idx, x in enumerate(current_values)
             if not math.isclose(x, np.round(x), rel_tol=self.eps)
         ]
         return max(not_integer_vars, key=lambda x: x[1])
@@ -114,3 +113,15 @@ class MaxCliqueSolver:
             if len(current_clique) > len(best_clique):
                 best_clique = current_clique
         return best_clique
+
+    def get_solution(self) -> Tuple[List[float], float]:
+        try:
+            self.cplex_model.solve()
+            # get the solution variables and objective value
+            current_values = self.cplex_model.solution.get_values()
+            current_objective_value = (
+                self.cplex_model.solution.get_objective_value()
+            )
+            return current_objective_value, current_values
+        except:
+            return None, None
