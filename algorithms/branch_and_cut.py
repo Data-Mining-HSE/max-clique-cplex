@@ -70,7 +70,7 @@ class BNCSolver(MaxCliqueSolver):
         new_constraints = [ind_set[0] for ind_set in sorted_set][:top_k]
         return new_constraints if len(new_constraints) else None
 
-    def solve(self):
+    def solve(self) -> None:
         self.init_model_with_heuristic_solution()
         self.branch_and_cut()
         self.is_solution_is_clique = self.is_clique(self.get_solution_nodes(self.best_solution))
@@ -96,7 +96,7 @@ class BNCSolver(MaxCliqueSolver):
         self.branch_and_cut()
         self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
-    def branch_and_cut(self):
+    def branch_and_cut(self) -> None:
         current_objective_value, current_values = self.get_solution()
         if current_objective_value is None or not self.current_solution_is_best(current_objective_value):
             return

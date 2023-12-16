@@ -7,7 +7,7 @@ import networkx as nx
 import numpy as np
 from numpy.typing import NDArray
 
-from utils import ExperimentData
+from algorithms.utils import ExperimentData
 
 
 def read_dimacs_adjacency_matrix(path: Path) -> NDArray[np.int8]:

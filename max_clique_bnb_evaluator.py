@@ -6,9 +6,9 @@ from tap import Tap
 from algorithms.branch_and_bound import BNBSolver
 from algorithms.branch_and_cut import BNCSolver
 from algorithms.types import SolverTypes
+from algorithms.utils import (ExperiemntResult, ExperimentData, ReportData,
+                              read_experiemnt_config)
 from graph import Graph
-from utils import (ExperiemntResult, ExperimentData, ReportData,
-                   read_experiemnt_config)
 
 
 class ArgumentParser(Tap):
