@@ -1,117 +1,76 @@
-import argparse
-from graph import MCPGraph
+import time
+from enum import Enum
+from pathlib import Path
+
+from tap import Tap
+from tqdm import tqdm
+
 from algorithms.branch_and_bound import BNBSolver
 from algorithms.branch_and_cut import BNCSolver
+from graph import MCPGraph
 from utils import *
-from tqdm import tqdm
-import json
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--solver",
-        "-s",
-        type=str,
-        help="solver",
-        choices=["BnB", "BnC"],
-        default="BnB",
-    )
-    parser.add_argument(
-        "--input_data_file",
-        "-i",
-        type=str,
-        help="path to file with input benchmarks data",
-        default="medium.txt",
-    )
-    parser.add_argument(
-        "--output_results_dump",
-        "-o",
-        type=str,
-        help="path to output file",
-        default="results.csv",
-    )
-    return parser.parse_args()
+class SolverTypes(Enum):
+    BNB = 'bnb'
+    BNC = 'bnc'
+
+    def __str__(self) -> str:
+        return self.value
 
 
-@timeit
-def benchmark(graph: namedtuple, solver_name: str):
-    graph = MCPGraph(data=graph)
+class ArgumentParser(Tap):
+    solver: SolverTypes = SolverTypes.BNB
+    experiment_config: Path = Path('test.txt')
+    output_results_dump: Path = Path('results.csv')
+    benchmark_data_path: Path
+
+
+def benchmark(experiment: ExperimentData, solver_type: SolverTypes, benchmark_data_path: Path) -> ExperiemntResult:
+    graph = MCPGraph(experiment, benchmark_data_path)
     graph.independent_sets_generation()
     graph.filter_covered_not_connected()
-    solver = (
-        BNBSolver(graph=graph)
-        if solver_name == "BnB"
-        else BNCSolver(graph=graph)
-    )
+
+    if solver_type is SolverTypes.BNB:
+        solver_initer = BNBSolver
+    elif solver_type is SolverTypes.BNC:
+        solver_initer = BNCSolver
+    
+    solver = solver_initer(graph=graph)
+
+    start_time = time.time()
     solver.solve()
+    end_time = time.time()
+
     graph.maximum_clique_size_found = solver.maximum_clique_size
     graph.is_solution_is_clique = solver.is_solution_is_clique
-    return graph
+
+    experiemnt_result = ExperiemntResult(
+        graph_name=graph.name,
+        max_clique=graph.maximum_clique_size_gt,
+        founded_clique=solver.maximum_clique_size,
+        is_clique=solver.is_solution_is_clique,
+        time=end_time - start_time
+        )
+    return experiemnt_result
 
 
 def main():
-    args = parse_args()
-    benchmark_graphs = read_benchmarks(args.input_data_file)
-    column_names = [
-        "Graph Name",
-        "Correct Max Clique",
-        "Graph Complexity",
-        "Found Max Clique",
-        "Is Clique",
-        "Consumed Time",
-    ]
-    results = [column_names]
-    logger_output_path = osp.join(
-        osp.dirname(__file__),
-        "becnhmark_logs",
-        f"{args.input_data_file[:-4]}.log",
-    )
+    args = ArgumentParser(underscores_to_dashes=True).parse_args()
 
-    if os.path.exists(logger_output_path):
-        os.remove(logger_output_path)
+    experiments = read_experiemnt_config(args.experiment_config)
 
-    logger.add(logger_output_path)
+    report = ReportData()
 
-    for idx, graph in enumerate(tqdm(benchmark_graphs)):
-        graph_name = graph.GraphName[:-4]
-        logger.info(f"{args.solver} started for {graph_name} !")
-        # try:
-        graph, work_time = benchmark(graph, args.solver)
-        results.append(
-            [
-                str(graph.name),
-                str(graph.maximum_clique_size_gt),
-                str(graph.complexity_type),
-                str(graph.maximum_clique_size_found),
-                str(graph.is_solution_is_clique),
-                str(work_time),
-            ],
-        )
-        curr_result = {
-            "Right Maximum Clique Size": str(graph.maximum_clique_size_gt),
-            "Found Maximum Clique Size": str(graph.maximum_clique_size_found),
-            "Consumed Time": str(work_time),
-            "Is Clique": str(graph.is_solution_is_clique),
-            "Graph Complexity": str(graph.complexity_type),
-        }
-        per_graph_result_dir = osp.join(
-            RESULTS_DIR,
-            "per_graph_results",
-            f"{args.solver}",
-        )
-        if not osp.exists(per_graph_result_dir):
-            os.makedirs(per_graph_result_dir)
+    for experiment in tqdm(experiments):
+        graph_name = experiment.name
+        print(f'Processing the graph {graph_name} with solver {args.solver}')
 
-        with open(
-            osp.join(per_graph_result_dir, f"{graph_name}.json"),
-            "w",
-        ) as file:
-            json.dump(curr_result, file, indent=4)
+        experiement_result = benchmark(experiment, args.solver, args.benchmark_data_path)
+        report.add(experiement_result)
+        experiement_result.show()
 
-        logger.info(f"{args.solver} finished for {graph_name} !")
-
-    dump_results_to_csv("report", results)
+    report.dump(args.output_results_dump)
 
 
 if __name__ == "__main__":
