@@ -1,0 +1,6 @@
+.vscode/
+becnhmark_logs
+data
+*__pycache__*
+.env
+venv
