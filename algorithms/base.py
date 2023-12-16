@@ -1,13 +1,9 @@
 import math
-import random
 
 import cplex
 import numpy as np
 
 from graph import MCPGraph
-from utils import *
-
-# TODO Code refactoring
 
 
 class MaxCliqueSolver:

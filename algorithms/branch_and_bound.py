@@ -5,7 +5,6 @@ import numpy as np
 
 from algorithms.base import MaxCliqueSolver
 from graph import MCPGraph
-from utils import *
 
 
 class BNBSolver(MaxCliqueSolver):

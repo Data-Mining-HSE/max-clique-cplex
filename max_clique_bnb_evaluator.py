@@ -7,7 +7,8 @@ from tap import Tap
 from algorithms.branch_and_bound import BNBSolver
 from algorithms.branch_and_cut import BNCSolver
 from graph import MCPGraph
-from utils import *
+from utils import (ExperiemntResult, ExperimentData, ReportData,
+                   read_experiemnt_config)
 
 
 class SolverTypes(Enum):
