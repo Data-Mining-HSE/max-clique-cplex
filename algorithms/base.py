@@ -48,7 +48,7 @@ class MaxCliqueSolver:
             current_branch=current_branch
         )
 
-    def current_solution_is_best(self, current_objective_value):
+    def current_solution_is_best(self, current_objective_value: float) -> bool:
         current_objective_value = (
             math.ceil(current_objective_value)
             if not math.isclose(

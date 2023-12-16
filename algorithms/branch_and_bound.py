@@ -13,7 +13,7 @@ class BNBSolver(MaxCliqueSolver):
         super().__init__(graph=graph)
         self.cplex_model = self.construct_model()
 
-    def construct_model(self):
+    def construct_model(self) -> cplex.Cplex:
         nodes_amount = len(self.graph.nodes)
         obj = [1.0] * nodes_amount
         upper_bounds = [1.0] * nodes_amount
@@ -61,24 +61,24 @@ class BNBSolver(MaxCliqueSolver):
         )
         return problem
 
-    def solve(self):
+    def solve(self) -> None:
         self.init_model_with_heuristic_solution()
 
         self.branching()
         solution_nodes = np.where(np.isclose(self.best_solution, 1.0, atol=self.eps))
         self.is_solution_is_clique = self.is_clique(solution_nodes[0].tolist())
 
-    def left_branching(self, branching_var: Tuple[int, float], cur_branch: int):
+    def left_branching(self, branching_var: Tuple[int, float], cur_branch: int) -> None:
         self.add_left_constraint(branching_var, cur_branch)
         self.branching()
         self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
-    def right_branching(self, branching_var: Tuple[int, float], cur_branch: int):
+    def right_branching(self, branching_var: Tuple[int, float], cur_branch: int) -> None:
         self.add_right_constraint(branching_var, cur_branch)
         self.branching()
         self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
-    def branching(self):
+    def branching(self) -> None:
         current_objective_value, current_values = self.get_solution()
         if current_objective_value is None or not self.current_solution_is_best(current_objective_value):
             return

@@ -1,5 +1,6 @@
 import math
 import time
+from typing import List
 
 import cplex
 import networkx as nx
@@ -15,7 +16,7 @@ class BNCSolver(MaxCliqueSolver):
         self.cplex_model = self.construct_model()
         self.tailing_off_time_threshold = tailing_off_time_threshold
 
-    def add_multiple_constraints(self, constraints):
+    def add_multiple_constraints(self, constraints: List[int]) -> None:
         constraint_senses = ['L'] * (len(constraints))
         right_hand_side = [1.0] * (len(constraints))
         constraint_names = [f'c{x}' for x in range(len(constraints))]
@@ -35,7 +36,7 @@ class BNCSolver(MaxCliqueSolver):
             names=constraint_names,
         )
 
-    def construct_model(self):
+    def construct_model(self) -> cplex.Cplex:
         nodes_amount = len(self.graph.nodes)
         obj = [1.0] * nodes_amount
         upper_bounds = [1.0] * nodes_amount
