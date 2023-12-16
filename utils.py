@@ -23,14 +23,11 @@ class ExperiemntResult:
     time: int
 
     def show(self) -> None:
-        msg = f'Graph: {self.graph_name}. Clique is found: {self.is_clique}. Size {self.founded_clique} (Best {self.max_clique}). Time {self.time}.'
+        msg = f'Graph: {self.graph_name}. Clique is found: {self.is_clique}. Size {self.founded_clique} (Best {self.max_clique}). Time {self.time:.2f}.'
         print(msg, flush=True)
 
 
 class ReportData:
-    """
-    Collect all results for processing report
-    """
     def __init__(self) -> None:
         self.graph_names: List[str] = []
         self.max_cliques: List[int] = []
@@ -40,13 +37,7 @@ class ReportData:
 
     @property
     def header(self) -> List[str]:
-        column_names = [
-            'Name',
-            'Max Clique',
-            'Found',
-            'Is Clique',
-            'Time',
-        ]
+        column_names = ['Name', 'Max Clique', 'Found', 'Is Clique', 'Time']
         return column_names
     
     def add(self, result: ExperiemntResult) -> None:
@@ -62,10 +53,10 @@ class ReportData:
         frame = pd.DataFrame(data, index = self.header)
         frame.to_csv(output_path, header=False)
 
+
 def read_experiemnt_config(experiment_config: Path) -> List[ExperimentData]:
     """
-    This function returns the list of ExperimentData objects
-    with information of graphs in experiment list: Name of graph and Max Clique
+    Returns the list of ExperimentData objects with information of graph
     """
     with experiment_config.open() as test_data:
         experiments = [ExperimentData(*tuple(line.strip().split(','))) for line in test_data.readlines()]

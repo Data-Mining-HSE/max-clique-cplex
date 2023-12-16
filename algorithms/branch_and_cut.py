@@ -15,6 +15,26 @@ class BNCSolver(MaxCliqueSolver):
         self.cplex_model = self.construct_model()
         self.tailing_off_time_threshold = tailing_off_time_threshold
 
+    def add_multiple_constraints(self, constraints):
+        constraint_senses = ['L'] * (len(constraints))
+        right_hand_side = [1.0] * (len(constraints))
+        constraint_names = [f'c{x}' for x in range(len(constraints))]
+        new_constraints = []
+
+        for constraint in constraints:
+            constraint = [
+                [f'x{i}' for i in constraint],
+                [1.0] * len(constraint),
+            ]
+            new_constraints.append(constraint)
+
+        self.cplex_model.linear_constraints.add(
+            lin_expr=new_constraints,
+            senses=constraint_senses,
+            rhs=right_hand_side,
+            names=constraint_names,
+        )
+
     def construct_model(self):
         nodes_amount = len(self.graph.nodes)
         obj = [1.0] * nodes_amount
@@ -107,7 +127,8 @@ class BNCSolver(MaxCliqueSolver):
 
     def check_solution(self, curr_values):
         solution_nodes = np.where(np.isclose(curr_values, 1.0, atol=1e-5))
-        is_clique, subgraph = self.is_clique(solution_nodes[0].tolist())
+        is_clique = self.is_clique(solution_nodes[0].tolist())
+        subgraph = self.graph.graph.subgraph(solution_nodes[0].tolist())
         return None if is_clique else self.get_complement_edges(subgraph)
 
     def goto_left_branch(self, branching_var, cur_branch):

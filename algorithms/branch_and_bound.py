@@ -21,28 +21,18 @@ class BNBSolver(MaxCliqueSolver):
         columns_names = [f'x{x}' for x in range(nodes_amount)]
 
         not_connected_edges_amount = len(self.graph.not_connected_vertexes)
-        independent_vertex_sets_amount = len(
-            self.graph.independent_vertex_sets,
-        )
+        independent_vertex_sets_amount = len(self.graph.independent_vertex_sets)
 
-        right_hand_side = [1.0] * (
-            not_connected_edges_amount + independent_vertex_sets_amount
-        )
-        constraint_names = [
-            f'c{x}'
-            for x in range(
-                not_connected_edges_amount + independent_vertex_sets_amount,
-            )
-        ]
-        constraint_senses = ['L'] * (
-            not_connected_edges_amount + independent_vertex_sets_amount
-        )
+        right_hand_side = [1.0] * (not_connected_edges_amount + independent_vertex_sets_amount)
+        constraint_names = [f'c{x}' for x in range(not_connected_edges_amount + independent_vertex_sets_amount)]
+        constraint_senses = ['L'] * (not_connected_edges_amount + independent_vertex_sets_amount)
 
         problem = cplex.Cplex()
         problem.set_results_stream(None)
         problem.set_warning_stream(None)
         problem.set_error_stream(None)
         problem.objective.set_sense(problem.objective.sense.maximize)
+
         problem.variables.add(
             obj=obj,
             ub=upper_bounds,
@@ -72,34 +62,28 @@ class BNBSolver(MaxCliqueSolver):
 
     def solve(self):
         self.init_model_with_heuristic_solution()
-        # branch&bound recursive algorithm
+
         self.branching()
-        solution_nodes = np.where(
-            np.isclose(self.best_solution, 1.0, atol=1e-5),
-        )
+        solution_nodes = np.where(np.isclose(self.best_solution, 1.0, atol=self.eps))
+
         self.is_solution_is_clique = self.is_clique(solution_nodes[0].tolist())
 
     def goto_left_branch(self, branching_var, cur_branch):
-        # Add Left constraints
         self.add_left_constraint(branching_var, cur_branch)
         self.branching()
         self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
     def goto_right_branch(self, branching_var, cur_branch):
-        # Add Right constraints
         self.add_right_constraint(branching_var, cur_branch)
         self.branching()
         self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
     def branching(self):
         self.cplex_model.solve()
-        # get the solution variables and objective value
-        current_values = self.cplex_model.solution.get_values()
-        current_objective_value = (
-            self.cplex_model.solution.get_objective_value()
-        )
 
-        # There is no sense in branching further
+        current_values = self.cplex_model.solution.get_values()
+        current_objective_value = self.cplex_model.solution.get_objective_value()
+
         if not self.current_solution_is_best(current_objective_value):
             return
 

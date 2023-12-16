@@ -1,4 +1,5 @@
 import math
+from typing import List, Set, Tuple
 
 import numpy as np
 
@@ -14,42 +15,13 @@ class MaxCliqueSolver:
         self.eps = 1e-5
         self.branch_num = 0
 
-    # below code taken from https://stackoverflow.com/questions/59009712/
-    # fastest-way-of-checking-if-a-subgraph-is-a-clique-in-networkx
-    def is_clique(self, nodelist):
-        chek_subgraph = self.graph.graph.subgraph(nodelist)
-        num_nodes = len(nodelist)
-        return (
-            chek_subgraph.size() == num_nodes * (num_nodes - 1) / 2,
-            chek_subgraph,
-        )
+    # https://stackoverflow.com/questions/59009712/
+    def is_clique(self, nodes: List[int]) -> bool:
+        subgraph = self.graph.graph.subgraph(nodes)
+        num_nodes = len(nodes)
+        return subgraph.size() == num_nodes * (num_nodes - 1) / 2
 
-    def add_multiple_constraints(self, constraints):
-        constraint_senses = ["L"] * (len(constraints))
-        right_hand_side = [1.0] * (len(constraints))
-        constraint_names = [f"c{x}" for x in range(len(constraints))]
-        new_constraints = []
-
-        for constraint in constraints:
-            constraint = [
-                [f"x{i}" for i in constraint],
-                [1.0] * len(constraint),
-            ]
-            new_constraints.append(constraint)
-
-        self.cplex_model.linear_constraints.add(
-            lin_expr=new_constraints,
-            senses=constraint_senses,
-            rhs=right_hand_side,
-            names=constraint_names,
-        )
-
-    def add_left_constraint(self, branching_var: tuple, current_branch: int):
-        branching_var_idx, branching_var_value = branching_var
-        # solver sometime can produce variables like that -1.1102230246251565e-16 and math.floor() round it to -1
-        if math.floor(branching_var_value) == -1:
-            branching_var_value = 0
-        right_hand_side = [math.floor(branching_var_value)]
+    def _add_constraint(self, branching_var_idx: int, right_hand_side: List[int], current_branch: int) -> None:
         self.cplex_model.linear_constraints.add(
             lin_expr=[[[f'x{branching_var_idx}'], [1.0]]],
             senses=['E'],
@@ -57,14 +29,23 @@ class MaxCliqueSolver:
             names=[f'c{current_branch}'],
         )
 
-    def add_right_constraint(self, branching_var: tuple, current_branch: int):
+    def add_left_constraint(self, branching_var: Tuple[int, float], current_branch: int) -> None:
+        branching_var_idx, branching_var_value = branching_var
+        branching_var_value = 0 if branching_var_value < self.eps else branching_var_value
+        right_hand_side = [math.floor(branching_var_value)]
+        self._add_constraint(
+            branching_var_idx=branching_var_idx,
+            right_hand_side=right_hand_side,
+            current_branch=current_branch
+        )
+
+    def add_right_constraint(self, branching_var: Tuple[int, float], current_branch: int) -> None:
         branching_var_idx, branching_var_value = branching_var
         right_hand_side = [math.ceil(branching_var_value)]
-        self.cplex_model.linear_constraints.add(
-            lin_expr=[[[f'x{branching_var_idx}'], [1.0]]],
-            senses=['E'],
-            rhs=right_hand_side,
-            names=[f'c{current_branch}'],
+        self._add_constraint(
+            branching_var_idx=branching_var_idx,
+            right_hand_side=right_hand_side,
+            current_branch=current_branch
         )
 
     def current_solution_is_best(self, current_objective_value):
@@ -73,13 +54,11 @@ class MaxCliqueSolver:
             if not math.isclose(
                 current_objective_value,
                 round(current_objective_value),
-                rel_tol=1e-5,
+                rel_tol=self.eps,
             )
             else current_objective_value
         )
-        if current_objective_value <= self.maximum_clique_size:
-            return False
-        return True
+        return current_objective_value > self.maximum_clique_size
 
     def get_branching_var(self, current_values):
         if all(
@@ -108,19 +87,12 @@ class MaxCliqueSolver:
         best_heuristic_sol = self.initial_heuristic()
         is_clique = self.is_clique(list(best_heuristic_sol))
         if is_clique:
-            self.best_solution = generate_init_best_solution(
-                best_heuristic_sol,
-            )
+            self.best_solution = generate_init_best_solution(best_heuristic_sol)
             self.maximum_clique_size = len(best_heuristic_sol)
         else:
             raise Exception('Initial heuristic solution is not clique!')
 
-    def initial_heuristic(self):
-        """Greedy Init Heuristic
-
-        # :return:
-        # Max Clique by Heuristic: set
-        """
+    def initial_heuristic(self) -> Set[int]:
         best_clique = set()
         for vertex in self.graph.nodes:
             current_clique = set()
