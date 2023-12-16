@@ -1,4 +1,5 @@
 import math
+from typing import Tuple
 
 import cplex
 import numpy as np
@@ -65,15 +66,14 @@ class BNBSolver(MaxCliqueSolver):
 
         self.branching()
         solution_nodes = np.where(np.isclose(self.best_solution, 1.0, atol=self.eps))
-
         self.is_solution_is_clique = self.is_clique(solution_nodes[0].tolist())
 
-    def goto_left_branch(self, branching_var, cur_branch):
+    def left_branching(self, branching_var: Tuple[int, float], cur_branch: int):
         self.add_left_constraint(branching_var, cur_branch)
         self.branching()
         self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
-    def goto_right_branch(self, branching_var, cur_branch):
+    def right_branching(self, branching_var: Tuple[int, float], cur_branch: int):
         self.add_right_constraint(branching_var, cur_branch)
         self.branching()
         self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
@@ -101,10 +101,10 @@ class BNBSolver(MaxCliqueSolver):
         self.branch_num += 1
         cur_branch = self.branch_num
         branching_var = self.get_branching_var(current_values)
-        # go to  right branch if value closer to 1
-        if round(branching_var[1]):
-            self.goto_right_branch(branching_var, cur_branch)
-            self.goto_left_branch(branching_var, cur_branch)
-        else:
-            self.goto_left_branch(branching_var, cur_branch)
-            self.goto_right_branch(branching_var, cur_branch)
+
+        if round(branching_var[1]): # closer to 1
+            self.right_branching(branching_var, cur_branch)
+            self.left_branching(branching_var, cur_branch)
+        else: # closer to 0
+            self.left_branching(branching_var, cur_branch)
+            self.right_branching(branching_var, cur_branch)

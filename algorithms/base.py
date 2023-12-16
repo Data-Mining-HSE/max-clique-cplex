@@ -60,13 +60,8 @@ class MaxCliqueSolver:
         )
         return current_objective_value > self.maximum_clique_size
 
-    def get_branching_var(self, current_values):
-        if all(
-            [
-                math.isclose(x, np.round(x), rel_tol=self.eps)
-                for x in current_values
-            ],
-        ):
+    def get_branching_var(self, current_values: List[float]) -> Tuple[int, float]:
+        if all([math.isclose(x, np.round(x), rel_tol=self.eps) for x in current_values]):
             return -1
 
         not_integer_vars = [
@@ -76,21 +71,15 @@ class MaxCliqueSolver:
         ]
         return max(not_integer_vars, key=lambda x: x[1])
 
-    def init_model_with_heuristic_solution(self):
-        # helper function
-        def generate_init_best_solution(best_heuristic_sol):
-            solution = np.zeros(len(self.graph.nodes))
-            solution[list(best_heuristic_sol)] = 1
-            return solution
-
-        # apply greedy heuristic first
+    def init_model_with_heuristic_solution(self) -> None:
         best_heuristic_sol = self.initial_heuristic()
-        is_clique = self.is_clique(list(best_heuristic_sol))
-        if is_clique:
-            self.best_solution = generate_init_best_solution(best_heuristic_sol)
-            self.maximum_clique_size = len(best_heuristic_sol)
-        else:
+        if not self.is_clique(list(best_heuristic_sol)):
             raise Exception('Initial heuristic solution is not clique!')
+
+        solution = np.zeros(len(self.graph.nodes))
+        solution[list(best_heuristic_sol)] = 1
+        self.best_solution = list(solution)
+        self.maximum_clique_size = len(best_heuristic_sol)
 
     def initial_heuristic(self) -> Set[int]:
         best_clique = set()
