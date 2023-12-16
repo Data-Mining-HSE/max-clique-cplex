@@ -3,7 +3,6 @@ from enum import Enum
 from pathlib import Path
 
 from tap import Tap
-from tqdm import tqdm
 
 from algorithms.branch_and_bound import BNBSolver
 from algorithms.branch_and_cut import BNCSolver
@@ -62,7 +61,7 @@ def main():
 
     report = ReportData()
 
-    for experiment in tqdm(experiments):
+    for experiment in experiments:
         graph_name = experiment.name
         print(f'Processing the graph {graph_name} with solver {args.solver}')
 

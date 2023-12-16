@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
+import pandas as pd
+
 
 @dataclass
 class ExperimentData:
@@ -39,11 +41,11 @@ class ReportData:
     @property
     def header(self) -> List[str]:
         column_names = [
-            'Graph Name',
-            'Correct Max Clique',
-            'Found Max Clique',
+            'Name',
+            'Max Clique',
+            'Found',
             'Is Clique',
-            'Consumed Time',
+            'Time',
         ]
         return column_names
     
@@ -55,10 +57,10 @@ class ReportData:
         self.times.append(result.time)
 
     def dump(self, output_path: Path) -> None:
-        output_path.mkdir(exist_ok=True)
-        # with output_path.open('w') as file_buff:
-        #     writer = csv.writer(file_buff)
-        #     writer.writerows(results)
+        output_path.parent.mkdir(exist_ok=True, parents=True)
+        data = [self.graph_names, self.max_cliques, self.founded_cliques, self.is_cliques, self.times]
+        frame = pd.DataFrame(data, index = self.header)
+        frame.to_csv(output_path, header=False)
 
 def read_experiemnt_config(experiment_config: Path) -> List[ExperimentData]:
     """
