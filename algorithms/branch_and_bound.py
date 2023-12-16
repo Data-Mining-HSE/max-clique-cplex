@@ -35,10 +35,8 @@ class BNBSolver(MaxCliqueSolver):
 
     def solve(self) -> None:
         self.init_model_with_heuristic_solution()
-
         self.branching()
-        solution_nodes = np.where(np.isclose(self.best_solution, 1.0, atol=self.eps))
-        self.is_solution_is_clique = self.is_clique(solution_nodes[0].tolist())
+        self.is_solution_is_clique = self.is_clique(self.get_solution_nodes(self.best_solution))
 
     def left_branching(self, branching_var: Tuple[int, float], cur_branch: int) -> None:
         self.add_left_constraint(branching_var, cur_branch)
@@ -50,18 +48,20 @@ class BNBSolver(MaxCliqueSolver):
         self.branching()
         self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
+    def is_new_clique(self, solution_values: List[float]) -> bool:
+        return all(
+            [
+                math.isclose(x, np.round(x), rel_tol=self.eps)
+                for x in solution_values
+            ],
+        )
+    
     def branching(self) -> None:
         current_objective_value, current_values = self.get_solution()
         if current_objective_value is None or not self.current_solution_is_best(current_objective_value):
             return
 
-        if all(
-            [
-                math.isclose(x, np.round(x), rel_tol=self.eps)
-                for x in current_values
-            ],
-        ):
-            # Best Solution updated.
+        if self.is_new_clique(current_values):
             self.best_solution = [round(x) for x in current_values]
             self.maximum_clique_size = math.floor(current_objective_value)
             return

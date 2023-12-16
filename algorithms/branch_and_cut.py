@@ -1,6 +1,6 @@
 import math
 import time
-from typing import List
+from typing import List, Optional
 
 import cplex
 import networkx as nx
@@ -74,23 +74,17 @@ class BNCSolver(MaxCliqueSolver):
     def solve(self):
         self.init_model_with_heuristic_solution()
         self.branch_and_cut()
-        solution_nodes = np.where(
-            np.isclose(self.best_solution, 1.0, atol=1e-5),
-        )
-
-        self.is_solution_is_clique = self.is_clique(solution_nodes[0].tolist())
+        self.is_solution_is_clique = self.is_clique(self.get_solution_nodes(self.best_solution))
 
     @staticmethod
-    def get_complement_edges(subgraph):
+    def get_complement_edges(subgraph: nx.Graph) -> List[int]:
         graph_complement = nx.complement(subgraph)
-        return list(
-            filter(lambda edge: edge[0] != edge[1], graph_complement.edges()),
-        )
+        return list(filter(lambda edge: edge[0] != edge[1], graph_complement.edges()))
 
-    def check_solution(self, curr_values):
-        solution_nodes = np.where(np.isclose(curr_values, 1.0, atol=1e-5))
-        is_clique = self.is_clique(solution_nodes[0].tolist())
-        subgraph = self.graph.graph.subgraph(solution_nodes[0].tolist())
+    def check_solution(self, curr_values: List[float]) -> Optional[List[int]]:
+        solution_nodes = self.get_solution_nodes(curr_values)
+        is_clique = self.is_clique(solution_nodes)
+        subgraph = self.graph.graph.subgraph(solution_nodes)
         return None if is_clique else self.get_complement_edges(subgraph)
 
     def left_branching(self, branching_var, cur_branch):

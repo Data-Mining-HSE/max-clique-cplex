@@ -17,6 +17,9 @@ class MaxCliqueSolver:
         self.eps = 1e-5
         self.branch_num = 0
 
+    def get_solution_nodes(self, values: List[float]) -> List[int]:
+        return np.where(np.isclose(values, 1.0, atol=self.eps))[0].tolist()
+
     def setup_cplex_model(self) -> cplex.Cplex:
         nodes_amount = len(self.graph.nodes)
         obj = [1.0] * nodes_amount
@@ -78,8 +81,7 @@ class MaxCliqueSolver:
 
     def add_left_constraint(self, branching_var: Tuple[int, float], current_branch: int) -> None:
         branching_var_idx, branching_var_value = branching_var
-        branching_var_value = 0 if branching_var_value < self.eps else branching_var_value
-        right_hand_side = [math.floor(branching_var_value)]
+        right_hand_side = [max(math.floor(branching_var_value), 0)]
         self._add_constraint(branching_var_idx, right_hand_side, current_branch)
 
     def add_right_constraint(self, branching_var: Tuple[int, float], current_branch: int) -> None:
@@ -121,7 +123,7 @@ class MaxCliqueSolver:
                 continue
             return best_clique
 
-    def get_solution(self) -> Tuple[List[float], float]:
+    def get_solution(self) -> Tuple[float, List[float]]:
         try:
             self.cplex_model.solve()
             # get the solution variables and objective value
