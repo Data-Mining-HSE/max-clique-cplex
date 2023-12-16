@@ -50,8 +50,8 @@ class ReportData:
     def dump(self, output_path: Path) -> None:
         output_path.parent.mkdir(exist_ok=True, parents=True)
         data = [self.graph_names, self.max_cliques, self.founded_cliques, self.is_cliques, self.times]
-        frame = pd.DataFrame(data, index = self.header)
-        frame.to_csv(output_path, header=False)
+        frame = pd.DataFrame(data, index = self.header).T
+        frame.to_csv(output_path, index=False)
 
 
 def read_experiemnt_config(experiment_config: Path) -> List[ExperimentData]:
