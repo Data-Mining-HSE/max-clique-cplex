@@ -13,9 +13,6 @@ class BNCSolver(MaxCliqueSolver):
     def __init__(self, graph: MCPGraph, tailing_off_time_threshold: int = 3600):
         super().__init__(graph=graph)
         self.cplex_model = self.construct_model()
-        self.best_solution = []
-        self.maximum_clique_size = 0
-        self.eps = 1e-5
         self.tailing_off_time_threshold = tailing_off_time_threshold
 
     def construct_model(self):
@@ -23,8 +20,8 @@ class BNCSolver(MaxCliqueSolver):
         obj = [1.0] * nodes_amount
         upper_bounds = [1.0] * nodes_amount
         lower_bounds = [0.0] * nodes_amount
-        types = ["C"] * nodes_amount
-        columns_names = [f"x{x}" for x in range(nodes_amount)]
+        types = ['C'] * nodes_amount
+        columns_names = [f'x{x}' for x in range(nodes_amount)]
 
         independent_vertex_sets_amount = len(
             self.graph.independent_vertex_sets,
@@ -32,9 +29,9 @@ class BNCSolver(MaxCliqueSolver):
 
         right_hand_side = [1.0] * independent_vertex_sets_amount
         constraint_names = [
-            f"c{x}" for x in range(independent_vertex_sets_amount)
+            f'c{x}' for x in range(independent_vertex_sets_amount)
         ]
-        constraint_senses = ["L"] * independent_vertex_sets_amount
+        constraint_senses = ['L'] * independent_vertex_sets_amount
 
         problem = cplex.Cplex()
         problem.set_results_stream(None)
@@ -52,7 +49,7 @@ class BNCSolver(MaxCliqueSolver):
         constraints = []
         # set constraints for all vertexes in independent set x_0 + x_1 + ... +  x_i  <=1 with i = len(independent_set)
         for ind_set in self.graph.independent_vertex_sets:
-            constraint = [[f"x{i}" for i in ind_set], [1.0] * len(ind_set)]
+            constraint = [[f'x{i}' for i in ind_set], [1.0] * len(ind_set)]
             constraints.append(constraint)
 
         problem.linear_constraints.add(
@@ -118,13 +115,13 @@ class BNCSolver(MaxCliqueSolver):
         # Add Left constraints
         self.add_left_constraint(branching_var, cur_branch)
         self.branch_and_cut()
-        self.cplex_model.linear_constraints.delete(f"c{cur_branch}")
+        self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
     def goto_right_branch(self, branching_var, cur_branch):
         # Add Right constraints
         self.add_right_constraint(branching_var, cur_branch)
         self.branch_and_cut()
-        self.cplex_model.linear_constraints.delete(f"c{cur_branch}")
+        self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
     def branch_and_cut(self):
         current_objective_value, current_values = self.get_solution()
