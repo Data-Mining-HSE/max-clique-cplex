@@ -1,5 +1,5 @@
 import math
-from typing import Tuple
+from typing import List, Tuple
 
 import cplex
 import numpy as np
@@ -14,44 +14,16 @@ class BNBSolver(MaxCliqueSolver):
         self.cplex_model = self.construct_model()
 
     def construct_model(self) -> cplex.Cplex:
-        nodes_amount = len(self.graph.nodes)
-        obj = [1.0] * nodes_amount
-        upper_bounds = [1.0] * nodes_amount
-        lower_bounds = [0.0] * nodes_amount
-        types = ['C'] * nodes_amount
-        columns_names = [f'x{x}' for x in range(nodes_amount)]
+        problem = self.setup_cplex_model()
 
-        not_connected_edges_amount = len(self.graph.not_connected_vertexes)
         independent_vertex_sets_amount = len(self.graph.independent_vertex_sets)
+        not_connected_edges_amount = len(self.graph.not_connected_vertexes)
 
         right_hand_side = [1.0] * (not_connected_edges_amount + independent_vertex_sets_amount)
         constraint_names = [f'c{x}' for x in range(not_connected_edges_amount + independent_vertex_sets_amount)]
         constraint_senses = ['L'] * (not_connected_edges_amount + independent_vertex_sets_amount)
 
-        problem = cplex.Cplex()
-        problem.set_results_stream(None)
-        problem.set_warning_stream(None)
-        problem.set_error_stream(None)
-        problem.objective.set_sense(problem.objective.sense.maximize)
-
-        problem.variables.add(
-            obj=obj,
-            ub=upper_bounds,
-            lb=lower_bounds,
-            names=columns_names,
-            types=types,
-        )
-
-        constraints = []
-        # set constraints for all vertexes in independent set x_0 + x_1 + ... +  x_i  <=1 with i = len(independent_set)
-        for ind_set in self.graph.independent_vertex_sets:
-            constraint = [[f'x{i}' for i in ind_set], [1.0] * len(ind_set)]
-            constraints.append(constraint)
-
-        # set constraints for not connected edges x_i + x_j <=1
-        for xi, xj in self.graph.not_connected_vertexes:
-            contraint = [[f'x{xi}', f'x{xj}'], [1.0, 1.0]]
-            constraints.append(contraint)
+        constraints = [*self.independent_set_constraints(), *self.not_connected_vertices_constraints()]
 
         problem.linear_constraints.add(
             lin_expr=constraints,
