@@ -1,26 +1,18 @@
+import math
+import time
+
 import cplex
+import networkx as nx
 import numpy as np
+
 from algorithms.base import MaxCliqueSolver
 from graph import MCPGraph
 from utils import *
-import math
-
-# TODO Code refactoring
 
 
 class BNCSolver(MaxCliqueSolver):
-    def __init__(
-        self,
-        graph: MCPGraph,
-        branching_strategy: str = "max",
-        debug_mode: bool = False,
-        tailing_off_time_threshold: int = 3600,
-    ):
-        super(BNCSolver, self).__init__(
-            graph=graph,
-            branching_strategy=branching_strategy,
-            debug_mode=debug_mode,
-        )
+    def __init__(self, graph: MCPGraph, tailing_off_time_threshold: int = 3600):
+        super().__init__(graph=graph)
         self.cplex_model = self.construct_model()
         self.best_solution = []
         self.maximum_clique_size = 0
@@ -97,31 +89,19 @@ class BNCSolver(MaxCliqueSolver):
             current_objective_value = (
                 self.cplex_model.solution.get_objective_value()
             )
-            if self.debug_mode:
-                logger.debug(current_values)
             return current_objective_value, current_values
 
         except:
             return None, None
 
-    @timeit
     def solve(self):
         self.init_model_with_heuristic_solution()
         self.branch_and_cut()
         solution_nodes = np.where(
             np.isclose(self.best_solution, 1.0, atol=1e-5),
         )
-        # log result
-        if self.is_clique(solution_nodes[0].tolist()):
-            logger.info(
-                f"Objective Value of MCP Problem (Maximum Clique Size): {self.maximum_clique_size}. It is a clique!",
-            )
-            self.is_solution_is_clique = True
-        else:
-            logger.info(
-                f"Objective Value of MCP Problem (Maximum Clique Size): {self.maximum_clique_size}. It is not a clique!",
-            )
-            self.is_solution_is_clique = False
+
+        self.is_solution_is_clique = self.is_clique(solution_nodes[0].tolist())
 
     @staticmethod
     def get_complement_edges(subgraph):
@@ -140,16 +120,12 @@ class BNCSolver(MaxCliqueSolver):
         self.add_left_constraint(branching_var, cur_branch)
         self.branch_and_cut()
         self.cplex_model.linear_constraints.delete(f"c{cur_branch}")
-        if self.debug_mode:
-            logger.info(f"|{self.graph.name}| The c{cur_branch} deleted")
 
     def goto_right_branch(self, branching_var, cur_branch):
         # Add Right constraints
         self.add_right_constraint(branching_var, cur_branch)
         self.branch_and_cut()
         self.cplex_model.linear_constraints.delete(f"c{cur_branch}")
-        if self.debug_mode:
-            logger.info(f"|{self.graph.name}| The c{cur_branch} deleted")
 
     def branch_and_cut(self):
         current_objective_value, current_values = self.get_solution()
@@ -162,8 +138,6 @@ class BNCSolver(MaxCliqueSolver):
         while time.time() - start_time <= self.tailing_off_time_threshold:
             new_constraints = self.separation(current_values)
             if new_constraints is None:
-                if self.debug_mode:
-                    logger.info("No more new separations! ")
                 break
             self.add_multiple_constraints(new_constraints)
             current_objective_value, current_values = self.get_solution()

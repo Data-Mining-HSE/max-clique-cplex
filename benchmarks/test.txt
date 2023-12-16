@@ -1,2 +1,1 @@
-GraphName,CorrectMaxClique,Level
-MANN_a9.clq,16,E
+MANN_a9,16

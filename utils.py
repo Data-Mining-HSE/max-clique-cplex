@@ -1,51 +1,13 @@
-import csv
-import datetime
-import os
-import os.path as osp
-import time
-from collections import namedtuple
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
-import networkx as nx
-from loguru import logger
-
-DATA_DIR = osp.join(osp.dirname(__file__), "benchmarks")
-SOURCE_GRAPH_DIR = osp.join(osp.dirname(__file__), "data")
-RESULTS_DIR = osp.join(osp.dirname(__file__), "results")
-LOG_DIR = osp.join(osp.dirname(__file__), "becnhmark_logs")
-
-EPS = 1e-5
-STRATEGIES = [
-    nx.coloring.strategy_largest_first,
-    nx.coloring.strategy_random_sequential,
-    nx.coloring.strategy_connected_sequential_bfs,
-    nx.coloring.strategy_connected_sequential_dfs,
-    nx.coloring.strategy_saturation_largest_first,
-    nx.coloring.strategy_smallest_last,
-]
-
-timestamp = datetime.datetime.now().strftime("%Y_%m_%d_%H:%M")
-
-
-def timeit(f):
-    """Measures time of function execution"""
-
-    def wrap(*args):
-        time1 = time.time()
-        result = f(*args)
-        time2 = time.time()
-        work_time = round(time2 - time1, 3)
-        logger.info(f"Function: <{f.__name__}> worked {work_time} seconds")
-        return result, work_time
-
-    return wrap
 
 @dataclass
 class ExperimentData:
     name: str
     max_clique: int
+
 
 @dataclass
 class ExperiemntResult:
@@ -59,7 +21,7 @@ class ExperiemntResult:
     time: int
 
     def show(self) -> None:
-        msg = f'Graph: {self.graph_name}. Clique is found: {self.is_clique}) with size {self.founded_clique}. Time {self.time}. Max known clique {self.max_clique}'
+        msg = f'Graph: {self.graph_name}. Clique is found: {self.is_clique}. Size {self.founded_clique} (Best {self.max_clique}). Time {self.time}.'
         print(msg, flush=True)
 
 

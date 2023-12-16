@@ -49,7 +49,7 @@ def benchmark(experiment: ExperimentData, solver_type: SolverTypes, benchmark_da
         graph_name=graph.name,
         max_clique=graph.maximum_clique_size_gt,
         founded_clique=solver.maximum_clique_size,
-        is_clique=solver.is_solution_is_clique,
+        is_clique=solver.is_solution_is_clique[0],
         time=end_time - start_time
         )
     return experiemnt_result

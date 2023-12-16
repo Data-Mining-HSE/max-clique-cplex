@@ -1,10 +1,21 @@
+import time
 from math import inf
-from typing import Union
+from pathlib import Path
 
+import networkx as nx
 import numpy as np
 from numpy.typing import NDArray
 
-from utils import *
+from utils import ExperimentData
+
+STRATEGIES = [
+    nx.coloring.strategy_largest_first,
+    nx.coloring.strategy_random_sequential,
+    nx.coloring.strategy_connected_sequential_bfs,
+    nx.coloring.strategy_connected_sequential_dfs,
+    nx.coloring.strategy_saturation_largest_first,
+    nx.coloring.strategy_smallest_last,
+]
 
 
 def read_dimacs_adjacency_matrix(path: Path) -> NDArray[np.int8]:
@@ -42,6 +53,7 @@ class MCPGraph:
         max_weighted: bool = False,
         solution=None,
         strategies=STRATEGIES,
+        eps=1e-5
     ):
         """Independent Vertex Sets generation via graph coloring
 
@@ -62,7 +74,6 @@ class MCPGraph:
         start_time = time.time()
         for _ in range(iteration_number):
             if time.time() - start_time >= time_limit:
-                logger.info("Reach time limit at searching ind sets")
                 break
 
             for strategy in strategies:
@@ -97,7 +108,7 @@ class MCPGraph:
                     if max_weighted:
                         if (
                             len(ind_set) >= minimum_set_size
-                            and set_weight > 1 + EPS
+                            and set_weight > 1 + eps
                         ):
                             generated_independent_sets.add(
                                 tuple((tuple(ind_set), set_weight)),
