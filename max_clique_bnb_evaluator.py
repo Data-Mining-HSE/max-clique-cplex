@@ -6,7 +6,7 @@ from tap import Tap
 
 from algorithms.branch_and_bound import BNBSolver
 from algorithms.branch_and_cut import BNCSolver
-from graph import MCPGraph
+from graph import Graph
 from utils import (ExperiemntResult, ExperimentData, ReportData,
                    read_experiemnt_config)
 
@@ -21,13 +21,13 @@ class SolverTypes(Enum):
 
 class ArgumentParser(Tap):
     solver: SolverTypes = SolverTypes.BNB
+    benchmark_data_path: Path
     experiment_config: Path = Path('test.txt')
     output_results_dump: Path = Path('results.csv')
-    benchmark_data_path: Path
 
 
 def benchmark(experiment: ExperimentData, solver_type: SolverTypes, benchmark_data_path: Path) -> ExperiemntResult:
-    graph = MCPGraph(experiment, benchmark_data_path)
+    graph = Graph(experiment, benchmark_data_path)
     graph.independent_sets_generation()
     graph.filter_covered_not_connected()
 

@@ -8,15 +8,6 @@ from numpy.typing import NDArray
 
 from utils import ExperimentData
 
-STRATEGIES = [
-    nx.coloring.strategy_largest_first,
-    nx.coloring.strategy_random_sequential,
-    nx.coloring.strategy_connected_sequential_bfs,
-    nx.coloring.strategy_connected_sequential_dfs,
-    nx.coloring.strategy_saturation_largest_first,
-    nx.coloring.strategy_smallest_last,
-]
-
 
 def read_dimacs_adjacency_matrix(path: Path) -> NDArray[np.int8]:
     with path.open() as file_buff:
@@ -30,7 +21,7 @@ def read_dimacs_adjacency_matrix(path: Path) -> NDArray[np.int8]:
     return adjacency_matrix
 
 
-class MCPGraph:
+class Graph:
     def __init__(self, experiment: ExperimentData, benchmark_data_path: Path):
         self.name = experiment.name
         self.graph_path = benchmark_data_path / f'{self.name}.clq'
@@ -52,18 +43,17 @@ class MCPGraph:
         time_limit: int = 500,
         max_weighted: bool = False,
         solution=None,
-        strategies=STRATEGIES,
         eps=1e-5
     ):
-        """Independent Vertex Sets generation via graph coloring
-
-            This function is also solve Max Weighted Independent Sets problem (Not a proper way of solve
-                                                                                            it via coloring. I know)
-
-        Returns:
-        Nothing returns. Function update self.independent_vertex_sets field if max_weighted = False
-                                                                            else return set of weighted ind sets
-        """
+        strategies = [
+            nx.coloring.strategy_largest_first,
+            nx.coloring.strategy_random_sequential,
+            nx.coloring.strategy_connected_sequential_bfs,
+            nx.coloring.strategy_connected_sequential_dfs,
+            nx.coloring.strategy_saturation_largest_first,
+            nx.coloring.strategy_smallest_last,
+        ]
+        
         generated_independent_sets = (
             self.independent_vertex_sets if not max_weighted else set()
         )
@@ -78,7 +68,6 @@ class MCPGraph:
 
             for strategy in strategies:
                 dict_of_independet_sets = dict()
-                # get coloring with current strategy: running_coloring - dict(key=vertex, value=color)
                 running_coloring = nx.coloring.greedy_color(
                     self.graph,
                     strategy=strategy,

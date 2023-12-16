@@ -4,11 +4,11 @@ import cplex
 import numpy as np
 
 from algorithms.base import MaxCliqueSolver
-from graph import MCPGraph
+from graph import Graph
 
 
 class BNBSolver(MaxCliqueSolver):
-    def __init__(self, graph: MCPGraph):
+    def __init__(self, graph: Graph):
         super().__init__(graph=graph)
         self.cplex_model = self.construct_model()
 

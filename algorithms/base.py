@@ -2,11 +2,11 @@ import math
 
 import numpy as np
 
-from graph import MCPGraph
+from graph import Graph
 
 
 class MaxCliqueSolver:
-    def __init__(self, graph: MCPGraph):
+    def __init__(self, graph: Graph):
         self.graph = graph
         self.best_solution = []
         self.maximum_clique_size = 0

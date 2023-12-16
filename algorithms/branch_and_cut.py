@@ -6,11 +6,11 @@ import networkx as nx
 import numpy as np
 
 from algorithms.base import MaxCliqueSolver
-from graph import MCPGraph
+from graph import Graph
 
 
 class BNCSolver(MaxCliqueSolver):
-    def __init__(self, graph: MCPGraph, tailing_off_time_threshold: int = 3600):
+    def __init__(self, graph: Graph, tailing_off_time_threshold: int = 3600):
         super().__init__(graph=graph)
         self.cplex_model = self.construct_model()
         self.tailing_off_time_threshold = tailing_off_time_threshold
