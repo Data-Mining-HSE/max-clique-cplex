@@ -1,10 +1,9 @@
 import math
 import time
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import cplex
 import networkx as nx
-import numpy as np
 
 from algorithms.base import MaxCliqueSolver
 from graph import Graph
@@ -87,14 +86,12 @@ class BNCSolver(MaxCliqueSolver):
         subgraph = self.graph.graph.subgraph(solution_nodes)
         return None if is_clique else self.get_complement_edges(subgraph)
 
-    def left_branching(self, branching_var, cur_branch):
-        # Add Left constraints
+    def left_branching(self, branching_var: Tuple[int, float], cur_branch: int) -> None:
         self.add_left_constraint(branching_var, cur_branch)
         self.branch_and_cut()
         self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
-    def right_branching(self, branching_var, cur_branch):
-        # Add Right constraints
+    def right_branching(self, branching_var: Tuple[int, float], cur_branch: int) -> None:
         self.add_right_constraint(branching_var, cur_branch)
         self.branch_and_cut()
         self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
