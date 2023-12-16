@@ -42,12 +42,9 @@ def benchmark(experiment: ExperimentData, solver_type: SolverTypes, benchmark_da
     solver.solve()
     end_time = time.time()
 
-    graph.maximum_clique_size_found = solver.maximum_clique_size
-    graph.is_solution_is_clique = solver.is_solution_is_clique
-
     experiemnt_result = ExperiemntResult(
         graph_name=graph.name,
-        max_clique=graph.maximum_clique_size_gt,
+        max_clique=experiment.max_clique,
         founded_clique=solver.maximum_clique_size,
         is_clique=solver.is_solution_is_clique[0],
         time=end_time - start_time

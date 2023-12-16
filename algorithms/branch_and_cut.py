@@ -65,8 +65,7 @@ class BNCSolver(MaxCliqueSolver):
             minimum_set_size=2,
             iteration_number=1,
             max_weighted=True,
-            solution=solution,
-            strategies=[nx.coloring.strategy_random_sequential],
+            solution=solution
         )
         sorted_set = sorted(
             independent_sets,

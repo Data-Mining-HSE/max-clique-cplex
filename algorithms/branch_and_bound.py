@@ -17,8 +17,8 @@ class BNBSolver(MaxCliqueSolver):
         obj = [1.0] * nodes_amount
         upper_bounds = [1.0] * nodes_amount
         lower_bounds = [0.0] * nodes_amount
-        types = ["C"] * nodes_amount
-        columns_names = [f"x{x}" for x in range(nodes_amount)]
+        types = ['C'] * nodes_amount
+        columns_names = [f'x{x}' for x in range(nodes_amount)]
 
         not_connected_edges_amount = len(self.graph.not_connected_vertexes)
         independent_vertex_sets_amount = len(
@@ -29,12 +29,12 @@ class BNBSolver(MaxCliqueSolver):
             not_connected_edges_amount + independent_vertex_sets_amount
         )
         constraint_names = [
-            f"c{x}"
+            f'c{x}'
             for x in range(
                 not_connected_edges_amount + independent_vertex_sets_amount,
             )
         ]
-        constraint_senses = ["L"] * (
+        constraint_senses = ['L'] * (
             not_connected_edges_amount + independent_vertex_sets_amount
         )
 
@@ -54,12 +54,12 @@ class BNBSolver(MaxCliqueSolver):
         constraints = []
         # set constraints for all vertexes in independent set x_0 + x_1 + ... +  x_i  <=1 with i = len(independent_set)
         for ind_set in self.graph.independent_vertex_sets:
-            constraint = [[f"x{i}" for i in ind_set], [1.0] * len(ind_set)]
+            constraint = [[f'x{i}' for i in ind_set], [1.0] * len(ind_set)]
             constraints.append(constraint)
 
         # set constraints for not connected edges x_i + x_j <=1
         for xi, xj in self.graph.not_connected_vertexes:
-            contraint = [[f"x{xi}", f"x{xj}"], [1.0, 1.0]]
+            contraint = [[f'x{xi}', f'x{xj}'], [1.0, 1.0]]
             constraints.append(contraint)
 
         problem.linear_constraints.add(
@@ -83,13 +83,13 @@ class BNBSolver(MaxCliqueSolver):
         # Add Left constraints
         self.add_left_constraint(branching_var, cur_branch)
         self.branching()
-        self.cplex_model.linear_constraints.delete(f"c{cur_branch}")
+        self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
     def goto_right_branch(self, branching_var, cur_branch):
         # Add Right constraints
         self.add_right_constraint(branching_var, cur_branch)
         self.branching()
-        self.cplex_model.linear_constraints.delete(f"c{cur_branch}")
+        self.cplex_model.linear_constraints.delete(f'c{cur_branch}')
 
     def branching(self):
         self.cplex_model.solve()
