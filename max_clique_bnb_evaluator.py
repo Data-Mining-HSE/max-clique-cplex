@@ -51,7 +51,7 @@ def main():
 
     for experiment in experiments:
         graph_name = experiment.name
-        print(f'Processing the graph {graph_name} with solver {args.solver}')
+        print(f'Processing the graph {graph_name} with solver {args.solver}', flush=True)
         experiement_result = benchmark(experiment, args.solver, args.benchmark_data_path)
         report.add(experiement_result)
         experiement_result.show()
