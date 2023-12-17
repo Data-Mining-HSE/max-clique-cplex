@@ -124,7 +124,7 @@ class MaxCliqueSolver:
         self.best_solution = list(solution)
         self.maximum_clique_size = len(best_heuristic_sol)
         if self.debug_mode:
-            print(f'Initial clique has size {self.maximum_clique_size}', flush = True)
+            print(f'Initial clique has size {self.maximum_clique_size}', flush=True)
 
     def get_hueristic_clique(self) -> Set[int]:
         best_clique = set()
@@ -137,6 +137,7 @@ class MaxCliqueSolver:
             clique_not_changed += 1
             if clique_not_changed > self.initial_clique_hueristics:
                 return best_clique
+        return best_clique
 
     def get_solution(self) -> Tuple[float, List[float]]:
         try:
