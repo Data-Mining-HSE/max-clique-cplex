@@ -27,7 +27,7 @@ def benchmark(experiment: ExperimentData, solver_type: SolverTypes, benchmark_da
         SolverTypes.BNB: BNBSolver,
         SolverTypes.BNC: BNCSolver
     }
-    solver = solver_map[solver_type](graph=graph)
+    solver = solver_map[solver_type](graph=graph, debug_mode=True)
 
     start_time = time.time()
     solver.solve()

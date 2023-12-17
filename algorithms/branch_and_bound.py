@@ -1,4 +1,5 @@
 import math
+import time
 from typing import List, Tuple
 
 import cplex
@@ -9,8 +10,8 @@ from graph import Graph
 
 
 class BNBSolver(MaxCliqueSolver):
-    def __init__(self, graph: Graph):
-        super().__init__(graph=graph)
+    def __init__(self, graph: Graph, debug_mode: bool = False) -> None:
+        super().__init__(graph=graph, debug_mode=debug_mode)
         self.cplex_model = self.construct_model()
 
     def construct_model(self) -> cplex.Cplex:
@@ -35,6 +36,7 @@ class BNBSolver(MaxCliqueSolver):
 
     def solve(self) -> None:
         self.init_model_with_heuristic_solution()
+        self.start_time = time.time()
         self.branching()
         self.is_solution_is_clique = self.is_clique(self.get_solution_nodes(self.best_solution))
 
@@ -64,6 +66,7 @@ class BNBSolver(MaxCliqueSolver):
         if self.is_new_clique(current_values):
             self.best_solution = [round(x) for x in current_values]
             self.maximum_clique_size = math.floor(current_objective_value)
+            self.show_update_solution(self.maximum_clique_size)
             return
 
         self.branch_num += 1

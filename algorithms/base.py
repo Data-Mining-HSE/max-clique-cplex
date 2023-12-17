@@ -1,4 +1,5 @@
 import math
+import time
 from typing import List, Set, Tuple
 
 import cplex
@@ -9,13 +10,15 @@ from graph import Graph
 
 
 class MaxCliqueSolver:
-    def __init__(self, graph: Graph) -> None:
+    def __init__(self, graph: Graph, debug_mode: bool = False) -> None:
         self.graph = graph
         self.best_solution = []
         self.maximum_clique_size = 0
         self.branch_num = 0
         self.eps = 1e-5
         self.branch_num = 0
+        self.debug_mode = debug_mode
+        self.start_time = 0
 
     def get_solution_nodes(self, values: List[float]) -> List[int]:
         return np.where(np.isclose(values, 1.0, atol=self.eps))[0].tolist()
@@ -132,3 +135,10 @@ class MaxCliqueSolver:
             return current_objective_value, current_values
         except:
             return None, None
+    
+    def get_processing_time(self) -> int:
+        return int(time.time() - self.start_time)
+
+    def show_update_solution(self, new_solution: int) -> None:
+        if self.debug_mode:
+            print(f'[{self.get_processing_time()}] The best solution is updated as {new_solution}', flush=True)

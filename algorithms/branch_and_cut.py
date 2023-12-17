@@ -10,8 +10,8 @@ from graph import Graph
 
 
 class BNCSolver(MaxCliqueSolver):
-    def __init__(self, graph: Graph, tailing_off_time_threshold: int = 3600):
-        super().__init__(graph=graph)
+    def __init__(self, graph: Graph, tailing_off_time_threshold: int = 3600, debug_mode: bool =False):
+        super().__init__(graph=graph, debug_mode=debug_mode)
         self.cplex_model = self.construct_model()
         self.tailing_off_time_threshold = tailing_off_time_threshold
 
@@ -72,6 +72,7 @@ class BNCSolver(MaxCliqueSolver):
 
     def solve(self) -> None:
         self.init_model_with_heuristic_solution()
+        self.start_time = time.time()
         self.branch_and_cut()
         self.is_solution_is_clique = self.is_clique(self.get_solution_nodes(self.best_solution))
 
@@ -124,6 +125,7 @@ class BNCSolver(MaxCliqueSolver):
             else:
                 self.best_solution = [round(x) for x in current_values]
                 self.maximum_clique_size = math.floor(current_objective_value)
+                self.show_update_solution(self.maximum_clique_size)
             return
 
         # go to right branch if value closer to 1
