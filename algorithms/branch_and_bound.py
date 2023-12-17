@@ -10,8 +10,17 @@ from graph import Graph
 
 
 class BNBSolver(MaxCliqueSolver):
-    def __init__(self, graph: Graph, debug_mode: bool = False) -> None:
-        super().__init__(graph=graph, debug_mode=debug_mode)
+    def __init__(self, graph: Graph,
+                 debug_mode: bool = False,
+                 branching_treshold: int = np.inf,
+                 initial_clique_hueristics: int = 1e6
+    ) -> None:
+
+        super().__init__(graph=graph,
+                         debug_mode=debug_mode,
+                         branching_treshold=branching_treshold,
+                         initial_clique_hueristics=initial_clique_hueristics
+        )
         self.cplex_model = self.construct_model()
 
     def construct_model(self) -> cplex.Cplex:
@@ -67,6 +76,11 @@ class BNBSolver(MaxCliqueSolver):
             self.best_solution = [round(x) for x in current_values]
             self.maximum_clique_size = math.floor(current_objective_value)
             self.show_update_solution(self.maximum_clique_size)
+            self.branch_num_without_update = 0
+            return
+    
+        self.branch_num_without_update += 1
+        if self.branch_num_without_update > self.branching_treshold:
             return
 
         self.branch_num += 1

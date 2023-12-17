@@ -4,14 +4,24 @@ from typing import List, Optional, Tuple
 
 import cplex
 import networkx as nx
+import numpy as np
 
 from algorithms.base import MaxCliqueSolver
 from graph import Graph
 
 
 class BNCSolver(MaxCliqueSolver):
-    def __init__(self, graph: Graph, tailing_off_time_threshold: int = 3600, debug_mode: bool =False):
-        super().__init__(graph=graph, debug_mode=debug_mode)
+    def __init__(self, graph: Graph,
+                 tailing_off_time_threshold: int = 3600,
+                 debug_mode: bool = False,
+                 branching_treshold: int = np.inf,
+                 initial_clique_hueristics: int = 1e6
+    ) -> None:
+        super().__init__(graph=graph,
+                         debug_mode=debug_mode,
+                         branching_treshold=branching_treshold,
+                         initial_clique_hueristics=initial_clique_hueristics
+        )
         self.cplex_model = self.construct_model()
         self.tailing_off_time_threshold = tailing_off_time_threshold
 

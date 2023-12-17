@@ -23,7 +23,7 @@ class ExperiemntResult:
     time: int
 
     def show(self) -> None:
-        msg = f'Graph: {self.graph_name}. Clique is found: {self.is_clique}. Size {self.founded_clique} (Best {self.max_clique}). Time {self.time:.2f}.'
+        msg = f'Graph: {self.graph_name}. Clique is found: {self.is_clique and self.founded_clique == self.max_clique}. Size {self.founded_clique} (Best {self.max_clique}). Time {self.time:.2f}.'
         print(msg, flush=True)
 
 

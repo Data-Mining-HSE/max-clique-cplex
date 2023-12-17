@@ -10,7 +10,10 @@ from graph import Graph
 
 
 class MaxCliqueSolver:
-    def __init__(self, graph: Graph, debug_mode: bool = False) -> None:
+    def __init__(self, graph: Graph,
+                 debug_mode: bool = False,
+                 branching_treshold: int = np.inf,
+                 initial_clique_hueristics: int = 1e6) -> None:
         self.graph = graph
         self.best_solution = []
         self.maximum_clique_size = 0
@@ -19,6 +22,9 @@ class MaxCliqueSolver:
         self.branch_num = 0
         self.debug_mode = debug_mode
         self.start_time = 0
+        self.branching_treshold = branching_treshold
+        self.branch_num_without_update = 0
+        self.initial_clique_hueristics = initial_clique_hueristics
 
     def get_solution_nodes(self, values: List[float]) -> List[int]:
         return np.where(np.isclose(values, 1.0, atol=self.eps))[0].tolist()
@@ -117,14 +123,20 @@ class MaxCliqueSolver:
         solution[list(best_heuristic_sol)] = 1
         self.best_solution = list(solution)
         self.maximum_clique_size = len(best_heuristic_sol)
+        if self.debug_mode:
+            print(f'Initial clique has size {self.maximum_clique_size}', flush = True)
 
     def get_hueristic_clique(self) -> Set[int]:
         best_clique = set()
+        clique_not_changed = 0
         for clique in nx.find_cliques(self.graph.graph):
             if len(clique) > len(best_clique):
                 best_clique = clique
+                clique_not_changed = 0
                 continue
-            return best_clique
+            clique_not_changed += 1
+            if clique_not_changed > self.initial_clique_hueristics:
+                return best_clique
 
     def get_solution(self) -> Tuple[float, List[float]]:
         try:

@@ -27,7 +27,7 @@ def benchmark(experiment: ExperimentData, solver_type: SolverTypes, benchmark_da
         SolverTypes.BNB: BNBSolver,
         SolverTypes.BNC: BNCSolver
     }
-    solver = solver_map[solver_type](graph=graph, debug_mode=True)
+    solver = solver_map[solver_type](graph=graph, debug_mode=True, branching_treshold=1e12)
 
     start_time = time.time()
     solver.solve()
@@ -50,8 +50,8 @@ def main():
     report = ReportData()
 
     for experiment in experiments:
-        graph_name = experiment.name
-        print(f'Processing the graph {graph_name} with solver {args.solver}', flush=True)
+        # graph_name = experiment.name
+        # print(f'Processing the graph {graph_name} with solver {args.solver}', flush=True)
         experiement_result = benchmark(experiment, args.solver, args.benchmark_data_path)
         report.add(experiement_result)
         experiement_result.show()
