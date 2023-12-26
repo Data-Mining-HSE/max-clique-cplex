@@ -1,5 +1,6 @@
 networkx==3.1
 numpy==1.24.4
-loguru==0.7.2
-tqdm==4.66.1
+pandas==2.0.3
 typed-argument-parser==1.9.0
+
+# cplex==20.1.0.0
