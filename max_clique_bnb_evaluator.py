@@ -4,7 +4,6 @@ from pathlib import Path
 from tap import Tap
 
 from algorithms.branch_and_bound import BNBSolver
-from algorithms.branch_and_cut import BNCSolver
 from algorithms.types import SolverTypes
 from algorithms.utils import (ExperiemntResult, ExperimentData, ReportData,
                               read_experiemnt_config)
@@ -24,10 +23,9 @@ def benchmark(experiment: ExperimentData, solver_type: SolverTypes, benchmark_da
     graph.filter_covered_not_connected()
 
     solver_map = {
-        SolverTypes.BNB: BNBSolver,
-        SolverTypes.BNC: BNCSolver
+        SolverTypes.BNB: BNBSolver
     }
-    solver = solver_map[solver_type](graph=graph, debug_mode=True, branching_treshold=1e6)
+    solver = solver_map[solver_type](graph=graph, debug_mode=True)
 
     start_time = time.time()
     solver.solve()
@@ -50,8 +48,8 @@ def main():
     report = ReportData()
 
     for experiment in experiments:
-        # graph_name = experiment.name
-        # print(f'Processing the graph {graph_name} with solver {args.solver}', flush=True)
+        graph_name = experiment.name
+        print(f'Processing the graph {graph_name} with solver {args.solver}', flush=True)
         experiement_result = benchmark(experiment, args.solver, args.benchmark_data_path)
         report.add(experiement_result)
         experiement_result.show()

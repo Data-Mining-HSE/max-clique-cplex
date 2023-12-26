@@ -98,7 +98,7 @@ class Graph:
         if max_weighted:
             return generated_independent_sets
 
-    def filter_covered_not_connected(self, filtration_limit: int = 300000):
+    def filter_covered_not_connected(self, filtration_limit: int = 3e5):
         filtered_not_connected = []
         for idx, not_connected_vertexes in enumerate(self.not_connected_vertexes):
             vertexes_are_covered_by_set = False
